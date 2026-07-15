@@ -6,8 +6,8 @@ This file contains the temporary API keys provided for the Stripe Connect integr
 
 | Key Type | Value |
 | :--- | :--- |
-| **Publishable Key** | `pk_test_51TWa16C4PTfB0I2XPl7KWaEgeyQOWAKXvicPoQoF3GxAmIFBYMeKI2Y9AsRNvdny7dzVJ7Inj9W15zVP7CfyKDPF003AgOz7G8` |
-| **Secret Key** | `sk_test_51TWa16C4PTfB0I2XuhANtHr1vj5OBzxiASPpJ0me3kjFRjEqqeIPWXXHqBMoOIc01N4aDxvaREeKBc5zyETWEUJH00jfL2jXGk` |
+| **Publishable Key** | `pk_test_........................'|
+| **Secret Key** | `sk_test_....................'|
 
 ---
 
