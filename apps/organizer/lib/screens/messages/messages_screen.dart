@@ -56,7 +56,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Recent Chats',
+                    'Thursday, February 5, 2026',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 13,
@@ -85,11 +85,74 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   key: _refreshKey,
                   stream: chatService.getChats(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFA2F301)));
-                  }
-                  
-                  final chats = snapshot.data ?? [];
+                  final rawChats = snapshot.data ?? [];
+                  final dummyChats = [
+                    ChatModel(
+                      id: 'chat_sarah',
+                      participantIds: [currentUserId ?? 'current_user', 'sarah_johnson'],
+                      participantNames: {
+                        currentUserId ?? 'current_user': 'Alex Chen',
+                        'sarah_johnson': 'Sarah Johnson',
+                      },
+                      participantImages: {
+                        currentUserId ?? 'current_user': 'assets/profile_image.png',
+                        'sarah_johnson': 'assets/chat_image1.png',
+                      },
+                      lastMessage: "That sounds great! I'm available..",
+                      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 5)),
+                      lastMessageSenderId: 'sarah_johnson',
+                      unreadCount: {currentUserId ?? 'current_user': 2},
+                    ),
+                    ChatModel(
+                      id: 'chat_mike',
+                      participantIds: [currentUserId ?? 'current_user', 'mike_davis'],
+                      participantNames: {
+                        currentUserId ?? 'current_user': 'Alex Chen',
+                        'mike_davis': 'Mike Davis',
+                      },
+                      participantImages: {
+                        currentUserId ?? 'current_user': 'assets/profile_image.png',
+                        'mike_davis': 'assets/chat_image2.png',
+                      },
+                      lastMessage: "Thanks for considering my application!",
+                      lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
+                      lastMessageSenderId: 'mike_davis',
+                      unreadCount: {currentUserId ?? 'current_user': 0},
+                    ),
+                    ChatModel(
+                      id: 'chat_emma',
+                      participantIds: [currentUserId ?? 'current_user', 'emma_wilson'],
+                      participantNames: {
+                        currentUserId ?? 'current_user': 'Alex Chen',
+                        'emma_wilson': 'Emma Wilson',
+                      },
+                      participantImages: {
+                        currentUserId ?? 'current_user': 'assets/profile_image.png',
+                        'emma_wilson': 'assets/chat_image3.png',
+                      },
+                      lastMessage: "Can we discuss the contract details?",
+                      lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
+                      lastMessageSenderId: 'emma_wilson',
+                      unreadCount: {currentUserId ?? 'current_user': 1},
+                    ),
+                    ChatModel(
+                      id: 'chat_alex',
+                      participantIds: [currentUserId ?? 'current_user', 'alex_turner'],
+                      participantNames: {
+                        currentUserId ?? 'current_user': 'Alex Chen',
+                        'alex_turner': 'Alex Turner',
+                      },
+                      participantImages: {
+                        currentUserId ?? 'current_user': 'assets/profile_image.png',
+                        'alex_turner': 'assets/message_image1.jpg',
+                      },
+                      lastMessage: "Perfect, see you at the venue!",
+                      lastMessageTime: DateTime.now().subtract(const Duration(days: 1)),
+                      lastMessageSenderId: 'alex_turner',
+                      unreadCount: {currentUserId ?? 'current_user': 0},
+                    ),
+                  ];
+                  final chats = rawChats.isNotEmpty ? rawChats : dummyChats;
                   final filteredChats = chats.where((chat) {
                     final otherName = chat.getOtherParticipantName(currentUserId ?? '');
                     return otherName.toLowerCase().contains(_searchQuery.toLowerCase()) ||

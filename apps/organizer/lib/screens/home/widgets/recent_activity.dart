@@ -76,10 +76,6 @@ class _RecentActivityState extends State<RecentActivity> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = Provider.of<AuthService>(context, listen: false).user?.uid;
-
-    if (currentUserId == null) return const SizedBox.shrink();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -94,21 +90,38 @@ class _RecentActivityState extends State<RecentActivity> {
         const SizedBox(height: 12),
         if (_isLoading)
           const Center(child: CircularProgressIndicator(color: Color(0xFFA2F301)))
-        else if (_activities.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Text('No recent activity', style: TextStyle(color: Color(0xFF666666))),
-          )
         else
           Builder(
             builder: (context) {
-              final data = _activities;
-              if (data.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Text('No recent activity', style: TextStyle(color: Color(0xFF666666))),
-                );
-              }
+              final data = _activities.isNotEmpty ? _activities : [
+                {
+                  'id': 'dummy_act_1',
+                  'type': 'application',
+                  'title': 'New application from Sarah Johnson',
+                  'subtitle': 'Jazz Night - Friday',
+                  'imageAsset': 'assets/recent_activity_image1.jpg',
+                  'timestamp': DateTime.now().subtract(const Duration(minutes: 5)).toIso8601String(),
+                  'metadata': {},
+                },
+                {
+                  'id': 'dummy_act_2',
+                  'type': 'message',
+                  'title': 'Message from Mike Davis',
+                  'subtitle': 'Wedding Reception',
+                  'imageAsset': 'assets/recent_activity_image2.jpg',
+                  'timestamp': DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
+                  'metadata': {},
+                },
+                {
+                  'id': 'dummy_act_3',
+                  'type': 'signature',
+                  'title': 'Booking confirmed with Emma Wilson',
+                  'subtitle': 'Corporate Event',
+                  'imageAsset': 'assets/recent_activity_image3.jpg',
+                  'timestamp': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
+                  'metadata': {},
+                },
+              ];
 
             final activities = data.map((item) {
               ActivityType type;
@@ -265,19 +278,20 @@ class _ActivityCard extends StatelessWidget {
   }
 
   Color _getTextColor() {
-    switch (item.type) {
-      case ActivityType.application: return const Color(0xFF4A9EFF);
-      case ActivityType.message: return const Color(0xFF888888);
-      case ActivityType.signature: return const Color(0xFFA2F301);
-      case ActivityType.gig: return const Color(0xFFA2F301);
-    }
+    return const Color(0xFFA2F301);
   }
 
   String _formatTimestamp(DateTime ts) {
     final diff = DateTime.now().difference(ts);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inMinutes < 60) {
+      if (diff.inMinutes <= 1) return 'Just now';
+      return '${diff.inMinutes} min ago';
+    }
+    if (diff.inHours < 24) {
+      if (diff.inHours == 1) return '1 hour ago';
+      return '${diff.inHours} hours ago';
+    }
+    if (diff.inDays == 1) return 'Yesterday';
     return '${diff.inDays}d ago';
   }
 

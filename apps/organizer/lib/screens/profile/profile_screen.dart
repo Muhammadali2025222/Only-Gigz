@@ -286,7 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'OnlyGigz v1.0.0',
+                      'GigBook v1.0.0',
                       style: TextStyle(
                           color: Color(0xFF444444), fontSize: 12),
                     ),

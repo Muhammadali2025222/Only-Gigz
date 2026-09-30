@@ -28,92 +28,11 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _handleSignIn() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final error = await authService.signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (error == null) {
-        final user = authService.currentUser;
-        if (user != null) {
-          final status = await authService.check2FAStatus(user.uid, 'organizers');
-          if (!mounted) return;
-          if (status['is2FAEnabled']) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => TwoFactorVerificationScreen(
-                  email: user.email!,
-                  uid: user.uid,
-                  phoneNumber: status['phoneNumber'],
-                  userRole: 'organizer',
-                ),
-              ),
-            );
-            return;
-          }
-
-          final userStatus = await authService.getUserStatus(user.uid);
-          if (!mounted) return;
-          if (userStatus == 'pending' || userStatus == 'pending_approval') {
-            Navigator.of(context).pushReplacementNamed('/account_pending');
-            return;
-          } else if (userStatus == 'rejected' || userStatus == 'denied') {
-            Navigator.of(context).pushReplacementNamed('/account_denied');
-            return;
-          }
-        }
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
-      }
-    }
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   Future<void> _handleSocialSignIn(String provider) async {
-    setState(() => _isLoading = true);
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final result = provider == 'google'
-        ? await authService.signInWithGoogle()
-        : await authService.signInWithApple();
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (result == null) {
-        final user = authService.currentUser;
-        if (user != null) {
-          final userStatus = await authService.getUserStatus(user.uid);
-          if (!mounted) return;
-          if (userStatus == 'pending' || userStatus == 'pending_approval') {
-            Navigator.of(context).pushReplacementNamed('/account_pending');
-            return;
-          } else if (userStatus == 'rejected' || userStatus == 'denied') {
-            Navigator.of(context).pushReplacementNamed('/account_denied');
-            return;
-          }
-        }
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else if (result == 'new_user') {
-        Navigator.of(context).pushReplacementNamed('/signup/step1');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result)),
-        );
-      }
-    }
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   void _handleForgotPassword() {

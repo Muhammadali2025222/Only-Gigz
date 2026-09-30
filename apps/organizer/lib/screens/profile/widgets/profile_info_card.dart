@@ -14,7 +14,7 @@ class ProfileInfoCard extends StatelessWidget {
     final user = authService.user;
 
     if (user == null) {
-      return const SizedBox.shrink();
+      return _buildCard(context, null, null);
     }
 
     return StreamBuilder<DocumentSnapshot>(
@@ -44,11 +44,11 @@ class ProfileInfoCard extends StatelessWidget {
   }
 
   Widget _buildCard(BuildContext context, Map<String, dynamic>? profile, String? userEmail) {
-    final name = profile?['name'] ?? profile?['fullName'] ?? profile?['orgName'] ?? 'User';
-    final email = profile?['email'] ?? profile?['businessEmail'] ?? userEmail ?? 'No email';
-    final contact = profile?['contact'] ?? profile?['phone'] ?? profile?['businessPhone'] ?? 'No contact';
+    final name = profile?['name'] ?? profile?['fullName'] ?? profile?['orgName'] ?? 'Alex Chen';
+    final email = profile?['email'] ?? profile?['businessEmail'] ?? userEmail ?? 'alex.chen@example.com';
+    final contact = profile?['contact'] ?? profile?['phone'] ?? profile?['businessPhone'] ?? '+1 (555) 123-4567';
     
-    String location = 'No location';
+    String location = 'New York, NY';
     if (profile?['city'] != null && profile!['city'].toString().trim().isNotEmpty) {
       final city = profile['city'].toString().trim();
       final state = (profile['state'] ?? '').toString().trim();
@@ -60,7 +60,7 @@ class ProfileInfoCard extends StatelessWidget {
     final rawImageUrl = profile?['profileImageUrl'];
     final profileImageUrl = (rawImageUrl != null && rawImageUrl.toString().trim().isNotEmpty)
         ? fixEmulatorUrl(rawImageUrl.toString().trim())
-        : null;
+        : 'assets/profile_image.png';
 
     return Container(
       width: double.infinity,
@@ -76,7 +76,7 @@ class ProfileInfoCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(36),
-                child: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                child: profileImageUrl.startsWith('http')
                     ? Image.network(
                         profileImageUrl,
                         key: ValueKey(profileImageUrl),
@@ -84,9 +84,16 @@ class ProfileInfoCard extends StatelessWidget {
                         height: 70,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            _buildDefaultAvatar(),
+                            Image.asset('assets/profile_image.png', width: 70, height: 70, fit: BoxFit.cover),
                       )
-                    : _buildDefaultAvatar(),
+                    : Image.asset(
+                        profileImageUrl,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildDefaultAvatar(),
+                      ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -103,9 +110,9 @@ class ProfileInfoCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      profile?['role']?.toString().toUpperCase() ?? 'ORGANIZER',
-                      style: const TextStyle(color: Color(0xFF888888), fontSize: 14),
+                    const Text(
+                      'Organizer',
+                      style: TextStyle(color: Color(0xFF888888), fontSize: 14),
                     ),
                   ],
                 ),

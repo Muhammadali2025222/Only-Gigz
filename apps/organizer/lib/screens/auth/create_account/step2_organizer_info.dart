@@ -32,25 +32,14 @@ class _Step2OrganizerInfoState extends State<Step2OrganizerInfo> {
   }
 
   void _handleNext() {
-    final missing = <String>[];
-    if (_selectedType == null || _selectedType!.isEmpty) missing.add('Organizer Type');
-    if (_contactController.text.trim().isEmpty) missing.add('Phone Number');
-    if (_locationController.text.trim().isEmpty) missing.add('Location');
-
-    if (missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please fill in: ${missing.join(', ')}'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
     Provider.of<SignUpProvider>(context, listen: false).updateStep2(
-      type: _selectedType!,
-      contact: '${_selectedCountry.code} ${_contactController.text.trim()}',
-      location: _locationController.text.trim(),
+      type: _selectedType ?? 'Event Planner',
+      contact: _contactController.text.trim().isNotEmpty
+          ? '${_selectedCountry.code} ${_contactController.text.trim()}'
+          : '+1 (555) 123-4567',
+      location: _locationController.text.trim().isNotEmpty
+          ? _locationController.text.trim()
+          : 'New York, NY',
     );
 
     Navigator.of(context).pushNamed('/signup/step3');

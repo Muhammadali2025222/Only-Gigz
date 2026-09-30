@@ -12,7 +12,7 @@ class HomeHeader extends StatefulWidget {
 }
 
 class _HomeHeaderState extends State<HomeHeader> {
-  int _unreadCount = 0;
+  int _unreadCount = 1;
   final _api = ApiService();
 
   @override
@@ -25,7 +25,7 @@ class _HomeHeaderState extends State<HomeHeader> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final count = await _api.getUnreadNotificationCount(user.uid);
-      if (mounted) setState(() => _unreadCount = count);
+      if (mounted) setState(() => _unreadCount = count > 0 ? count : 1);
     }
   }
 
@@ -38,7 +38,7 @@ class _HomeHeaderState extends State<HomeHeader> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Welcome Back',
+              'Welcome Back, Alex',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,

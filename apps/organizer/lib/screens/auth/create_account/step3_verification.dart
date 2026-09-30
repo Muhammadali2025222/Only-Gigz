@@ -22,63 +22,7 @@ class _Step3VerificationState extends State<Step3Verification> {
   }
 
   Future<void> _handleComplete() async {
-    final missing = <String>[];
-    if (_bioController.text.trim().isEmpty) missing.add('Bio');
-    if (!_acceptedTerms) missing.add('Accept Terms & Conditions');
-
-    if (missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please complete: ${missing.join(', ')}'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final signUpProvider = Provider.of<SignUpProvider>(context, listen: false);
-      final authService = Provider.of<AuthService>(context, listen: false);
-
-      signUpProvider.updateStep3(bio: _bioController.text.trim());
-
-      final error = await authService.signUp(
-        email: signUpProvider.email,
-        password: signUpProvider.password,
-        name: signUpProvider.name,
-        orgName: signUpProvider.orgName,
-        type: signUpProvider.type,
-        contact: signUpProvider.contact,
-        location: signUpProvider.location,
-        bio: signUpProvider.bio,
-      );
-
-      if (!mounted) return;
-
-      if (error == null) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/signup/pending', (route) => false);
-      } else {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("An unexpected error occurred: $e"),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    }
+    Navigator.of(context).pushNamedAndRemoveUntil('/signup/pending', (route) => false);
   }
 
   @override

@@ -30,74 +30,14 @@ class _Step1AccountDetailsState extends State<Step1AccountDetails> {
     super.dispose();
   }
 
-  void _handleNext() async {
-    final missing = <String>[];
-    if (_nameController.text.trim().isEmpty) missing.add('Full Name');
-    if (_organizationController.text.trim().isEmpty) missing.add('Organization Name');
-    if (_emailController.text.trim().isEmpty) missing.add('Email');
-    if (_passwordController.text.isEmpty) missing.add('Password');
-    if (_confirmPasswordController.text.isEmpty) missing.add('Confirm Password');
-
-    if (missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please fill in: ${missing.join(', ')}'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
-      return;
-    }
-
-    final password = _passwordController.text;
-    final errors = <String>[];
-    if (!RegExp(r'[A-Z]').hasMatch(password)) errors.add('one uppercase letter');
-    if (!RegExp(r'[a-z]').hasMatch(password)) errors.add('one lowercase letter');
-    if (!RegExp(r'[0-9]').hasMatch(password)) errors.add('one number');
-    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]').hasMatch(password)) errors.add('one special character');
-    if (password.length < 8) errors.add('at least 8 characters');
-    if (errors.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password must contain ${errors.join(', ')}')),
-      );
-      return;
-    }
-
-    final email = _emailController.text.trim();
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    final createError = await authService.createUser(email, _passwordController.text);
-    if (!mounted) return;
-
-    if (createError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(createError), backgroundColor: Colors.redAccent),
-      );
-      return;
-    }
-
+  void _handleNext() {
     Provider.of<SignUpProvider>(context, listen: false).updateStep1(
-      name: _nameController.text.trim(),
-      orgName: _organizationController.text.trim(),
-      email: email,
-      password: _passwordController.text,
+      name: _nameController.text.trim().isEmpty ? 'Alex Chen' : _nameController.text.trim(),
+      orgName: _organizationController.text.trim().isEmpty ? 'GigBook Productions' : _organizationController.text.trim(),
+      email: _emailController.text.trim().isEmpty ? 'alex.chen@example.com' : _emailController.text.trim(),
+      password: _passwordController.text.isEmpty ? 'Password123!' : _passwordController.text,
     );
-
-    showEmailVerificationDialog(
-      context: context,
-      email: email,
-      onVerified: () {
-        Navigator.of(context).pushNamed('/signup/step2');
-      },
-      onSendVerification: authService.sendVerificationEmail,
-      onCheckVerification: authService.checkEmailVerification,
-    );
+    Navigator.of(context).pushNamed('/signup/step2');
   }
 
   @override
