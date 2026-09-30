@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../models/gig.dart' as gig_model;
 import 'widgets/gigs_filter_tabs.dart';
@@ -7,8 +6,6 @@ import 'widgets/gig_card.dart' as gig_card;
 import 'post_gig_screen.dart';
 import '../../services/auth_service.dart';
 import '../home/widgets/home_header.dart';
-
-import 'package:onlygigz_organizer/services/api_service.dart';
 
 class GigsScreen extends StatefulWidget {
   const GigsScreen({super.key});
@@ -18,12 +15,10 @@ class GigsScreen extends StatefulWidget {
 }
 
 class _GigsScreenState extends State<GigsScreen> {
-  final ApiService _apiService = ApiService();
   String _selectedFilter = 'All';
-  Key _refreshKey = UniqueKey();
 
   void _refreshData() {
-    setState(() => _refreshKey = UniqueKey());
+    setState(() {});
   }
 
   @override
@@ -113,6 +108,7 @@ class _GigsScreenState extends State<GigsScreen> {
                     gig_model.GigModel(
                       gigId: 'dummy_gig_1',
                       title: 'Jazz Night - Friday',
+                      requirements: ['Live jazz band', 'Pianist'],
                       genres: ['Active'],
                       location: 'Blue Note Jazz Club, NYC',
                       date: 'Dec 24, 2025',
@@ -122,12 +118,12 @@ class _GigsScreenState extends State<GigsScreen> {
                       status: 'active',
                       imageUrl: 'assets/gig_image1.jpg',
                       organizerId: currentUserId ?? 'current_user',
-                      organizerName: 'Alex Chen',
                       createdAt: DateTime.now(),
                     ),
                     gig_model.GigModel(
                       gigId: 'dummy_gig_2',
                       title: 'Rock Fest - Saturday',
+                      requirements: ['Rock band', 'High energy'],
                       genres: ['Active'],
                       location: 'Madison Square Garden, NYC',
                       date: 'Jan 15, 2026',
@@ -137,7 +133,6 @@ class _GigsScreenState extends State<GigsScreen> {
                       status: 'active',
                       imageUrl: 'assets/gig_image2.jpg',
                       organizerId: currentUserId ?? 'current_user',
-                      organizerName: 'Alex Chen',
                       createdAt: DateTime.now(),
                     ),
                   ];
