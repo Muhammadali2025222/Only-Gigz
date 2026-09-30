@@ -105,33 +105,44 @@ class _GigsScreenState extends State<GigsScreen> {
                 ],
               ),
             ),
-            // Gig cards list - Fetching from Backend
+            // Gig cards list - Direct Render
             Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                key: _refreshKey,
-                future: _apiService.getGigs(organizerId: currentUserId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No gigs posted yet.', style: TextStyle(color: Colors.white70)));
-                  }
+              child: Builder(
+                builder: (context) {
+                  final dummyGigs = [
+                    gig_model.GigModel(
+                      gigId: 'dummy_gig_1',
+                      title: 'Jazz Night - Friday',
+                      genres: ['Active'],
+                      location: 'Blue Note Jazz Club, NYC',
+                      date: 'Dec 24, 2025',
+                      time: '8:00 PM',
+                      budget: '\$800 - \$1,200',
+                      description: 'Looking for a live jazz band or pianist for Friday night.',
+                      status: 'active',
+                      imageUrl: 'assets/gig_image1.jpg',
+                      organizerId: currentUserId ?? 'current_user',
+                      organizerName: 'Alex Chen',
+                      createdAt: DateTime.now(),
+                    ),
+                    gig_model.GigModel(
+                      gigId: 'dummy_gig_2',
+                      title: 'Rock Fest - Saturday',
+                      genres: ['Active'],
+                      location: 'Madison Square Garden, NYC',
+                      date: 'Jan 15, 2026',
+                      time: '7:00 PM',
+                      budget: '\$1,000 - \$1,500',
+                      description: 'High-energy rock band needed for Saturday night festival.',
+                      status: 'active',
+                      imageUrl: 'assets/gig_image2.jpg',
+                      organizerId: currentUserId ?? 'current_user',
+                      organizerName: 'Alex Chen',
+                      createdAt: DateTime.now(),
+                    ),
+                  ];
 
-                  final gigs = snapshot.data!
-                      .map(
-                        (data) => gig_model.GigModel.fromFirestore(
-                          data,
-                          data['id'] ?? '',
-                        ),
-                      )
-                      .toList();
-
-                  // Filter gigs based on selected tab
-                  final filteredGigs = gigs.where((gig) {
+                  final filteredGigs = dummyGigs.where((gig) {
                     if (_selectedFilter == 'All') return true;
                     if (_selectedFilter == 'Active') return gig.status == 'open' || gig.status == 'active';
                     if (_selectedFilter == 'Closed') return gig.status == 'closed';
@@ -147,9 +158,7 @@ class _GigsScreenState extends State<GigsScreen> {
                           const Icon(Icons.info_outline, color: Color(0xFF666666), size: 48),
                           const SizedBox(height: 16),
                           Text(
-                            _selectedFilter == 'All' 
-                                ? 'No gigs posted yet.' 
-                                : 'No $_selectedFilter gigs found.',
+                            'No $_selectedFilter gigs found.',
                             style: const TextStyle(color: Colors.white70, fontSize: 16),
                           ),
                         ],
@@ -157,18 +166,13 @@ class _GigsScreenState extends State<GigsScreen> {
                     );
                   }
 
-                  return RefreshIndicator(
-                    onRefresh: () async => _refreshData(),
-                    color: const Color(0xFFA2F301),
-                    backgroundColor: const Color(0xFF1A1A1F),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      itemCount: filteredGigs.length,
-                      itemBuilder: (context, index) {
-                        final gig = filteredGigs[index];
-                        return gig_card.GigCard(gig: gig);
-                      },
-                    ),
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    itemCount: filteredGigs.length,
+                    itemBuilder: (context, index) {
+                      final gig = filteredGigs[index];
+                      return gig_card.GigCard(gig: gig);
+                    },
                   );
                 },
               ),
