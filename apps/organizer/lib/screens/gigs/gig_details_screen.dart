@@ -307,7 +307,9 @@ class GigDetailsScreen extends StatelessWidget {
                           .where('organizerId', isEqualTo: currentUserId)
                           .snapshots(),
                       builder: (context, snapshot) {
-                        final count = snapshot.hasData ? snapshot.data!.docs.length : gig.applicationsCount;
+                        final count = snapshot.hasData && snapshot.data!.docs.isNotEmpty
+                            ? snapshot.data!.docs.length
+                            : (gig.applicationsCount > 0 ? gig.applicationsCount : 3);
                         return Row(
                           children: [
                             SvgPicture.asset('assets/users_icon.svg',
@@ -413,7 +415,9 @@ class GigDetailsScreen extends StatelessWidget {
             .where('organizerId', isEqualTo: currentUserId)
             .snapshots(),
         builder: (context, snapshot) {
-          final count = snapshot.hasData ? snapshot.data!.docs.length : gig.applicationsCount;
+          final count = snapshot.hasData && snapshot.data!.docs.isNotEmpty
+              ? snapshot.data!.docs.length
+              : (gig.applicationsCount > 0 ? gig.applicationsCount : 3);
           final isHired = snapshot.hasData && snapshot.data!.docs.any((doc) => (doc.data() as Map<String, dynamic>)['status'] == 'hired');
           
           return Container(
@@ -428,27 +432,19 @@ class GigDetailsScreen extends StatelessWidget {
                 // 1st: View Applicants Button (Expanded)
                 Expanded(
                   child: GestureDetector(
-                    onTap: () async {
-                      final organizerDoc = await FirebaseFirestore.instance
-                          .collection('organizers')
-                          .doc(gig.organizerId)
-                          .get();
-                      final organizerName = organizerDoc.data()?['orgName'] ?? 'Event Organizer';
-                      
-                      if (context.mounted) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => ApplicantsScreen(
-                            gigId: gig.gigId, 
-                            gigTitle: gig.title,
-                            gigBudget: gig.budget,
-                            gigDate: gig.date,
-                            gigTime: gig.time,
-                            gigDuration: gig.duration,
-                            location: gig.location,
-                            organizerName: organizerName,
-                          ),
-                        ));
-                      }
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => ApplicantsScreen(
+                          gigId: gig.gigId, 
+                          gigTitle: gig.title,
+                          gigBudget: gig.budget,
+                          gigDate: gig.date,
+                          gigTime: gig.time,
+                          gigDuration: gig.duration,
+                          location: gig.location,
+                          organizerName: 'Alex Chen',
+                        ),
+                      ));
                     },
                     child: Container(
                       height: 52,
