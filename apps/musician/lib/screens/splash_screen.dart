@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../constants.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,8 +20,12 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
+      if (kUseDummyData) {
+        Navigator.of(context).pushReplacementNamed('/home');
+        return;
+      }
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final authService = Provider.of<AuthService>(context, listen: false);

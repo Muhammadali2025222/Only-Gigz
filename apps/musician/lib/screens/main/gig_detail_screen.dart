@@ -123,19 +123,24 @@ class _GigDetailScreenState extends State<GigDetailScreen> {
                           SizedBox(
                             width: double.infinity,
                             height: 220,
-                            child: _isNetworkImage(gig.imageUrl ?? '')
-                                ? Image.network(
-                                    gig.imageUrl!,
+                            child: gig.isScraped
+                                ? Image.asset(
+                                    'assets/scrapped_gig_cover.jpeg',
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Image.asset(
-                                      'assets/gig_image1.jpg',
-                                      fit: BoxFit.cover,
-                                    ),
                                   )
-                                : Image.asset(
-                                    gig.imageUrl ?? 'assets/gig_image1.jpg',
-                                    fit: BoxFit.cover,
-                                  ),
+                                : _isNetworkImage(gig.imageUrl ?? '')
+                                    ? Image.network(
+                                        gig.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Image.asset(
+                                          'assets/gig_image1.jpg',
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        gig.imageUrl ?? 'assets/gig_image1.jpg',
+                                        fit: BoxFit.cover,
+                                      ),
                           ),
                           // Gradient overlay - stronger at bottom for text readability
                           Container(

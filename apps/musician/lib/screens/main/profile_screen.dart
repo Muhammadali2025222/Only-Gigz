@@ -9,6 +9,8 @@ import '../../widgets/about_section.dart';
 import '../../widgets/portfolio_section.dart';
 import '../../widgets/action_buttons.dart';
 import '../../models/profile_model.dart';
+import '../../constants.dart';
+import '../../data/dummy_profile.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -52,111 +54,124 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
       body: SafeArea(
-        child: StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('musicians')
-              .doc(currentUser?.uid)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFFA1F301)));
-            }
+        child: kUseDummyData
+            ? _buildProfileContent(
+                dummyProfile,
+                {
+                  'isFeatured': true,
+                  'featuredUntil': DateTime.now().add(const Duration(days: 15)).toIso8601String(),
+                  'featuredPlan': '30 Days',
+                },
+              )
+            : StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('musicians')
+                    .doc(currentUser?.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Color(0xFFA1F301)));
+                  }
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
-            }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+                  }
 
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Center(child: Text('Profile not found', style: TextStyle(color: Colors.white)));
-            }
+                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                    return const Center(child: Text('Profile not found', style: TextStyle(color: Colors.white)));
+                  }
 
-            final profileData = snapshot.data!.data() as Map<String, dynamic>;
-            final profile = Profile.fromFirestore(profileData);
+                  final profileData = snapshot.data!.data() as Map<String, dynamic>;
+                  final profile = Profile.fromFirestore(profileData);
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top bar with settings icon
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 12, right: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1A1A1F),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFFA1F301).withValues(alpha: 0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: SvgPicture.asset(
-                              'assets/setting_icon.svg',
-                              width: 22,
-                              height: 22,
-                              colorFilter: const ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Profile Card
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ProfileHeader(profile: profile),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Featured Artist Card
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: FeaturedArtistCard(profile: profileData),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // About Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: AboutSection(profile: profile),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Portfolio Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: PortfolioSection(
-                      portfolioItems: profile.portfolioItems,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Action Buttons
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ActionButtons(),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                  return _buildProfileContent(profile, profileData);
+                },
               ),
-            );
-          },
-        ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: _currentNavIndex,
         onTap: _onNavTap,
+      ),
+    );
+  }
+
+  Widget _buildProfileContent(Profile profile, Map<String, dynamic> profileData) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top bar with settings icon
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 12, right: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1A1F),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFA1F301).withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: SvgPicture.asset(
+                      'assets/setting_icon.svg',
+                      width: 22,
+                      height: 22,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Profile Card
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ProfileHeader(profile: profile),
+          ),
+          const SizedBox(height: 16),
+
+          // Featured Artist Card
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FeaturedArtistCard(profile: profileData),
+          ),
+          const SizedBox(height: 24),
+
+          // About Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AboutSection(profile: profile),
+          ),
+          const SizedBox(height: 24),
+
+          // Portfolio Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: PortfolioSection(
+              portfolioItems: profile.portfolioItems,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Action Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ActionButtons(),
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

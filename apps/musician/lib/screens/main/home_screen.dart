@@ -11,6 +11,8 @@ import 'gig_detail_screen.dart';
 import '../../widgets/bottom_navigation_bar.dart';
 import '../../widgets/gig_card.dart';
 import '../main/payment_method_screen.dart';
+import '../../constants.dart';
+import '../../data/dummy_gigs.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -325,101 +327,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Gigs list with Backend
             Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _apiService.getGigs(status: 'open', searchQuery: _searchQuery),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFA1F301)));
-                  }
+              child: kUseDummyData
+                  ? _buildGigsList(List.from(dummyGigs))
+                  : FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _apiService.getGigs(status: 'open', searchQuery: _searchQuery),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator(color: Color(0xFFA1F301)));
+                        }
 
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error: ${snapshot.error}',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    );
-                  }
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              'Error: ${snapshot.error}',
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          );
+                        }
 
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No gigs found',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  }
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No gigs found',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                          );
+                        }
 
-                  // Parse gigs
-                  List<Gig> gigs = snapshot.data!.map((data) {
-                    return Gig.fromFirestore(data, data['id'] ?? '');
-                  }).toList();
+                        // Parse gigs
+                        List<Gig> gigs = snapshot.data!.map((data) {
+                          return Gig.fromFirestore(data, data['id'] ?? '');
+                        }).toList();
 
-                  // Category filters
-                  List<Gig> filteredGigs = gigs.where((gig) {
-                    switch (_selectedFilterIndex) {
-                      case 1: // Gig Leads
-                        return gig.isScraped || (gig.organizer ?? '').toLowerCase().contains('gig lead');
-                      case 2: // Direct Gigs
-                        return !gig.isScraped && !(gig.organizer ?? '').toLowerCase().contains('gig lead');
-                      case 3: // This Week
-                        final now = DateTime.now();
-                        final todayStart = DateTime(now.year, now.month, now.day);
-                        final nextWeek = todayStart.add(const Duration(days: 8));
-                        return gig.date.isAfter(todayStart.subtract(const Duration(seconds: 1))) &&
-                               gig.date.isBefore(nextWeek);
-                      case 4: // High Pay
-                        final budgetDigits = RegExp(r'\d+').firstMatch(gig.pay.replaceAll(',', ''))?.group(0);
-                        final amount = budgetDigits != null ? int.tryParse(budgetDigits) ?? 0 : 0;
-                        return amount >= 200 || gig.pay.toLowerCase().contains('negotiable');
-                      default: // All
-                        return true;
-                    }
-                  }).toList();
-
-                  if (filteredGigs.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No matching gigs found',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    itemCount: filteredGigs.length,
-                    itemBuilder: (context, index) {
-                      final gig = filteredGigs[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Consumer<AuthService>(
-                          builder: (context, authService, _) {
-                            final isApplied = authService.appliedGigIds.contains(gig.id);
-                            return GigCard(
-                              gig: gig,
-                              isApplied: isApplied,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => GigDetailScreen(gig: gig),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                        return _buildGigsList(gigs);
+                      },
+                    ),
             ),
           ],
         ),
@@ -429,6 +374,76 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onNavTap,
         unreadMessageCount: _unreadMessageCount,
       ),
+    );
+  }
+
+  Widget _buildGigsList(List<Gig> gigs) {
+    if (_searchQuery.isNotEmpty) {
+      gigs = gigs.where((g) =>
+          g.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          g.genre.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          g.location.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+    }
+
+    // Category filters
+    List<Gig> filteredGigs = gigs.where((gig) {
+      switch (_selectedFilterIndex) {
+        case 1: // Gig Leads
+          return gig.isScraped || (gig.organizer ?? '').toLowerCase().contains('gig lead');
+        case 2: // Direct Gigs
+          return !gig.isScraped && !(gig.organizer ?? '').toLowerCase().contains('gig lead');
+        case 3: // This Week
+          final now = DateTime.now();
+          final todayStart = DateTime(now.year, now.month, now.day);
+          final nextWeek = todayStart.add(const Duration(days: 8));
+          return gig.date.isAfter(todayStart.subtract(const Duration(seconds: 1))) &&
+                 gig.date.isBefore(nextWeek);
+        case 4: // High Pay
+          final budgetDigits = RegExp(r'\d+').firstMatch(gig.pay.replaceAll(',', ''))?.group(0);
+          final amount = budgetDigits != null ? int.tryParse(budgetDigits) ?? 0 : 0;
+          return amount >= 200 || gig.pay.toLowerCase().contains('negotiable');
+        default: // All
+          return true;
+      }
+    }).toList();
+
+    if (filteredGigs.isEmpty) {
+      return Center(
+        child: Text(
+          'No matching gigs found',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: filteredGigs.length,
+      itemBuilder: (context, index) {
+        final gig = filteredGigs[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Consumer<AuthService>(
+            builder: (context, authService, _) {
+              final isApplied = authService.appliedGigIds.contains(gig.id);
+              return GigCard(
+                gig: gig,
+                isApplied: isApplied,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => GigDetailScreen(gig: gig),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

@@ -119,7 +119,9 @@ class Gig {
       expiryDate: data['expiryDate'],
       pay: data['budget'] ?? '',
       budget: data['budget'] ?? '',
-      imageUrl: fixEmulatorUrl(data['imageUrl']),
+      imageUrl: (isScraped && (data['imageUrl'] == null || data['imageUrl'].toString().trim().isEmpty))
+          ? 'assets/scrapped_gig_cover.jpeg'
+          : fixEmulatorUrl(data['imageUrl']),
       organizer: organizerName,
       organizerId: data['organizerId'] ?? data['organizer_id'],
       organizerImage: fixEmulatorUrl(data['organizerImage']),

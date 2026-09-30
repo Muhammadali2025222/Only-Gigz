@@ -32,9 +32,11 @@ class GigCard extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(16),
           image: DecorationImage(
-            image: _isNetworkImage(gig.imageUrl ?? '')
-                ? NetworkImage(gig.imageUrl!) as ImageProvider
-                : AssetImage(gig.imageUrl ?? 'assets/gig_image1.jpg'),
+            image: gig.isScraped
+                ? const AssetImage('assets/scrapped_gig_cover.jpeg') as ImageProvider
+                : _isNetworkImage(gig.imageUrl ?? '')
+                    ? NetworkImage(gig.imageUrl!) as ImageProvider
+                    : AssetImage(gig.imageUrl ?? 'assets/gig_image1.jpg'),
             fit: BoxFit.cover,
           ),
         ),

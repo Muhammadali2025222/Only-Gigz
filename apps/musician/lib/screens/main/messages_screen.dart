@@ -5,6 +5,8 @@ import '../../widgets/message_card.dart';
 import '../../widgets/message_search_bar.dart';
 import '../../models/chat_model.dart';
 import '../../services/chat_service.dart';
+import '../../constants.dart';
+import '../../data/dummy_chats.dart';
 import 'chat_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
@@ -100,68 +102,25 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
             // Messages List
             Expanded(
-              child: StreamBuilder<List<ChatModel>>(
-                stream: chatService.getChats(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFFA1F301)));
-                  }
+              child: kUseDummyData
+                  ? _buildChatsList(List.from(dummyChats), currentUserId ?? '')
+                  : StreamBuilder<List<ChatModel>>(
+                      stream: chatService.getChats(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator(color: Color(0xFFA1F301)));
+                        }
 
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-                  }
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+                        }
 
-                  final chats = snapshot.data ?? [];
-                  final filteredChats = chats.where((chat) {
-                    final otherName = chat.getOtherParticipantName(currentUserId ?? '');
-                    return otherName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                           chat.lastMessage.toLowerCase().contains(_searchQuery.toLowerCase());
-                  }).toList();
-
-                  if (filteredChats.isEmpty) {
-                    return Center(
-                      child: Text(
-                        _searchQuery.isEmpty ? 'No messages yet' : 'No chats found',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    itemCount: filteredChats.length,
-                    itemBuilder: (context, index) {
-                      final chat = filteredChats[index];
-                      final otherName = chat.getOtherParticipantName(currentUserId ?? '');
-                      final otherImage = chat.getOtherParticipantImage(currentUserId ?? '');
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: MessageCard(
-                          chat: chat,
-                          currentUserId: currentUserId ?? '',
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ChatScreen(
-                                  chatId: chat.id,
-                                  otherUserId: chat.getOtherParticipantId(currentUserId ?? ''),
-                                  otherUserName: otherName,
-                                  otherUserImage: otherImage,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                        final chats = snapshot.data ?? [];
+                        return _buildChatsList(chats, currentUserId ?? '');
+                      },
+                    ),
             ),
+
           ],
         ),
       ),
@@ -169,6 +128,56 @@ class _MessagesScreenState extends State<MessagesScreen> {
         currentIndex: _currentNavIndex,
         onTap: _onNavTap,
       ),
+    );
+  }
+
+  Widget _buildChatsList(List<ChatModel> chats, String currentUserId) {
+    final filteredChats = chats.where((chat) {
+      final otherName = chat.getOtherParticipantName(currentUserId);
+      return otherName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+             chat.lastMessage.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    if (filteredChats.isEmpty) {
+      return Center(
+        child: Text(
+          _searchQuery.isEmpty ? 'No messages yet' : 'No chats found',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: filteredChats.length,
+      itemBuilder: (context, index) {
+        final chat = filteredChats[index];
+        final otherName = chat.getOtherParticipantName(currentUserId);
+        final otherImage = chat.getOtherParticipantImage(currentUserId);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: MessageCard(
+            chat: chat,
+            currentUserId: currentUserId,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    chatId: chat.id,
+                    otherUserId: chat.getOtherParticipantId(currentUserId),
+                    otherUserName: otherName,
+                    otherUserImage: otherImage,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

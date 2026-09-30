@@ -5,6 +5,8 @@ import '../../widgets/application_card.dart';
 import '../../widgets/status_filter_chips.dart';
 import '../../models/application_model.dart';
 import '../../services/auth_service.dart';
+import '../../constants.dart';
+import '../../data/dummy_applications.dart';
 import 'application_detail_screen.dart';
 
 class ApplicationsScreen extends StatefulWidget {
@@ -27,6 +29,15 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
   }
 
   Future<void> _fetchApplications() async {
+    if (kUseDummyData) {
+      if (mounted) {
+        setState(() {
+          _applications = List.from(dummyApplications);
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     final authService = Provider.of<AuthService>(context, listen: false);
     final appsData = await authService.getApplications();
     

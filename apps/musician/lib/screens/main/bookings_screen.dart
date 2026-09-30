@@ -5,6 +5,8 @@ import '../../widgets/bottom_navigation_bar.dart';
 import '../../widgets/booking_card.dart';
 import '../../models/booking_model.dart';
 import '../../services/auth_service.dart';
+import '../../constants.dart';
+import '../../data/dummy_bookings.dart';
 import 'booking_detail_screen.dart';
 import 'contract_review_screen.dart';
 
@@ -60,95 +62,45 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
             // Scrollable Content
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('bookings')
-                    .where('musicianId', isEqualTo: currentUserId)
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: Text(
-                          'No bookings yet',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  final List<Booking> bookings = snapshot.data!.docs.map((doc) {
-                    return Booking.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
-                  }).toList();
-
-                  // Apply filter
-                  final List<Booking> filtered = bookings.where((b) {
-                    switch (_selectedFilter) {
-                      case 'Upcoming':
-                        return b.status == BookingStatus.upcoming;
-                      case 'Pending Review':
-                        return b.status == BookingStatus.waitingSignature;
-                      case 'Completed':
-                        return b.status == BookingStatus.completed || 
-                               b.status == BookingStatus.paymentReleased;
-                      case 'Cancelled':
-                        return b.status == BookingStatus.cancelled;
-                      default:
-                        return true;
-                    }
-                  }).toList();
-
-                  if (filtered.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: Text(
-                          'No $_selectedFilter bookings',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final booking = filtered[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: BookingCard(
-                          booking: booking,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => BookingDetailScreen(booking: booking),
+              child: kUseDummyData
+                  ? _buildBookingsList(List.from(dummyBookings))
+                  : StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('bookings')
+                          .where('musicianId', isEqualTo: currentUserId)
+                          .orderBy('createdAt', descending: true)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+                        }
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 40),
+                              child: Text(
+                                'No bookings yet',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
-                          ),
-                          onReviewContract: booking.contractStatus == ContractStatus.review
-                              ? () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => ContractReviewScreen(booking: booking),
-                                    ),
-                                  )
-                              : null,
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                          );
+                        }
+
+                        final List<Booking> bookings = snapshot.data!.docs.map((doc) {
+                          return Booking.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+                        }).toList();
+
+                        return _buildBookingsList(bookings);
+                      },
+                    ),
             ),
+
           ],
         ),
       ),
@@ -156,6 +108,62 @@ class _BookingsScreenState extends State<BookingsScreen> {
         currentIndex: _currentNavIndex,
         onTap: _onNavTap,
       ),
+    );
+  }
+
+  Widget _buildBookingsList(List<Booking> bookings) {
+    final List<Booking> filtered = bookings.where((b) {
+      switch (_selectedFilter) {
+        case 'Upcoming':
+          return b.status == BookingStatus.upcoming;
+        case 'Pending Review':
+          return b.status == BookingStatus.waitingSignature;
+        case 'Completed':
+          return b.status == BookingStatus.completed || 
+                 b.status == BookingStatus.paymentReleased;
+        case 'Cancelled':
+          return b.status == BookingStatus.cancelled;
+        default:
+          return true;
+      }
+    }).toList();
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Text(
+            'No $_selectedFilter bookings',
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) {
+        final booking = filtered[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: BookingCard(
+            booking: booking,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => BookingDetailScreen(booking: booking),
+              ),
+            ),
+            onReviewContract: booking.contractStatus == ContractStatus.review
+                ? () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ContractReviewScreen(booking: booking),
+                      ),
+                    )
+                : null,
+          ),
+        );
+      },
     );
   }
 
