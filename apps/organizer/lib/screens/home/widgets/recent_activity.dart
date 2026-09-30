@@ -45,33 +45,11 @@ class RecentActivity extends StatefulWidget {
 
 class _RecentActivityState extends State<RecentActivity> {
   List<Map<String, dynamic>> _activities = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadActivity();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadActivity();
-  }
-
-  Future<void> _loadActivity() async {
-    final apiService = Provider.of<ApiService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final currentUserId = authService.currentUser?.uid;
-    if (currentUserId == null) return;
-
-    try {
-      final data = await apiService.getRecentActivity(currentUserId);
-      if (mounted) setState(() { _activities = data; _isLoading = false; });
-    } catch (e) {
-      debugPrint('Error loading activity: $e');
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   @override
@@ -88,10 +66,7 @@ class _RecentActivityState extends State<RecentActivity> {
           ),
         ),
         const SizedBox(height: 12),
-        if (_isLoading)
-          const Center(child: CircularProgressIndicator(color: Color(0xFFA2F301)))
-        else
-          Builder(
+        Builder(
             builder: (context) {
               final data = _activities.isNotEmpty ? _activities : [
                 {

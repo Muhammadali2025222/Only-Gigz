@@ -77,123 +77,142 @@ class _MessagesScreenState extends State<MessagesScreen> {
             ),
             // Message list
             Expanded(
-              child: RefreshIndicator(
-                color: const Color(0xFFA2F301),
-                backgroundColor: const Color(0xFF1A1A1F),
-                onRefresh: () async => _refreshData(),
-                child: StreamBuilder<List<ChatModel>>(
-                  key: _refreshKey,
-                  stream: chatService.getChats(),
-                builder: (context, snapshot) {
-                  final rawChats = snapshot.data ?? [];
-                  final dummyChats = [
-                    ChatModel(
-                      id: 'chat_sarah',
-                      participantIds: [currentUserId ?? 'current_user', 'sarah_johnson'],
-                      participantNames: {
-                        currentUserId ?? 'current_user': 'Alex Chen',
-                        'sarah_johnson': 'Sarah Johnson',
-                      },
-                      participantImages: {
-                        currentUserId ?? 'current_user': 'assets/profile_image.png',
-                        'sarah_johnson': 'assets/chat_image1.png',
-                      },
-                      lastMessage: "That sounds great! I'm available..",
-                      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 5)),
-                      lastMessageSenderId: 'sarah_johnson',
-                      unreadCount: {currentUserId ?? 'current_user': 2},
+              child: Builder(
+                builder: (context) {
+                  final dummyItems = [
+                    _DummyMessageData(
+                      name: 'Sarah Johnson',
+                      message: "That sounds great! I'm available..",
+                      time: '5 min ago',
+                      image: 'assets/chat_image1.png',
+                      unreadCount: 2,
                     ),
-                    ChatModel(
-                      id: 'chat_mike',
-                      participantIds: [currentUserId ?? 'current_user', 'mike_davis'],
-                      participantNames: {
-                        currentUserId ?? 'current_user': 'Alex Chen',
-                        'mike_davis': 'Mike Davis',
-                      },
-                      participantImages: {
-                        currentUserId ?? 'current_user': 'assets/profile_image.png',
-                        'mike_davis': 'assets/chat_image2.png',
-                      },
-                      lastMessage: "Thanks for considering my application!",
-                      lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
-                      lastMessageSenderId: 'mike_davis',
-                      unreadCount: {currentUserId ?? 'current_user': 0},
+                    _DummyMessageData(
+                      name: 'Mike Davis',
+                      message: 'Thanks for considering my application!',
+                      time: '1 hour ago',
+                      image: 'assets/chat_image2.png',
+                      unreadCount: 0,
                     ),
-                    ChatModel(
-                      id: 'chat_emma',
-                      participantIds: [currentUserId ?? 'current_user', 'emma_wilson'],
-                      participantNames: {
-                        currentUserId ?? 'current_user': 'Alex Chen',
-                        'emma_wilson': 'Emma Wilson',
-                      },
-                      participantImages: {
-                        currentUserId ?? 'current_user': 'assets/profile_image.png',
-                        'emma_wilson': 'assets/chat_image3.png',
-                      },
-                      lastMessage: "Can we discuss the contract details?",
-                      lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
-                      lastMessageSenderId: 'emma_wilson',
-                      unreadCount: {currentUserId ?? 'current_user': 1},
+                    _DummyMessageData(
+                      name: 'Emma Wilson',
+                      message: 'Can we discuss the contract details?',
+                      time: '2 hours ago',
+                      image: 'assets/chat_image3.png',
+                      unreadCount: 1,
                     ),
-                    ChatModel(
-                      id: 'chat_alex',
-                      participantIds: [currentUserId ?? 'current_user', 'alex_turner'],
-                      participantNames: {
-                        currentUserId ?? 'current_user': 'Alex Chen',
-                        'alex_turner': 'Alex Turner',
-                      },
-                      participantImages: {
-                        currentUserId ?? 'current_user': 'assets/profile_image.png',
-                        'alex_turner': 'assets/message_image1.jpg',
-                      },
-                      lastMessage: "Perfect, see you at the venue!",
-                      lastMessageTime: DateTime.now().subtract(const Duration(days: 1)),
-                      lastMessageSenderId: 'alex_turner',
-                      unreadCount: {currentUserId ?? 'current_user': 0},
+                    _DummyMessageData(
+                      name: 'Alex Turner',
+                      message: 'Perfect, see you at the venue!',
+                      time: 'Yesterday',
+                      image: 'assets/message_image1.jpg',
+                      unreadCount: 0,
                     ),
                   ];
-                  final chats = rawChats.isNotEmpty ? rawChats : dummyChats;
-                  final filteredChats = chats.where((chat) {
-                    final otherName = chat.getOtherParticipantName(currentUserId ?? '');
-                    return otherName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                           chat.lastMessage.toLowerCase().contains(_searchQuery.toLowerCase());
-                  }).toList();
 
-                  if (filteredChats.isEmpty) {
-                    return Center(
-                      child: Text(
-                        _searchQuery.isEmpty ? 'No messages yet' : 'No chats found',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                      ),
-                    );
-                  }
+                  final filteredItems = dummyItems.where((item) {
+                    if (_searchQuery.isEmpty) return true;
+                    return item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                           item.message.toLowerCase().contains(_searchQuery.toLowerCase());
+                  }).toList();
 
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                    itemCount: filteredChats.length,
+                    itemCount: filteredItems.length,
                     itemBuilder: (context, index) {
-                      final chat = filteredChats[index];
-                      final otherName = chat.getOtherParticipantName(currentUserId ?? '');
-                      final otherImage = chat.getOtherParticipantImage(currentUserId ?? '');
-
-                      return MessageCard(
-                        chat: chat,
-                        currentUserId: currentUserId ?? '',
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ChatScreen(
-                              chatId: chat.id,
-                              otherUserId: chat.getOtherParticipantId(currentUserId ?? ''),
-                              name: otherName,
-                              imagePath: otherImage,
+                      final item = filteredItems[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A1F),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(32),
+                                  child: Image.asset(
+                                    item.image,
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                if (item.unreadCount > 0)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFA2F301),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 20,
+                                        minHeight: 20,
+                                      ),
+                                      child: Text(
+                                        '${item.unreadCount}',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        item.name,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        item.time,
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.5),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    item.message,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.6),
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     },
                   );
                 },
-              ),
               ),
             ),
           ],
@@ -201,4 +220,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
     );
   }
+}
+
+class _DummyMessageData {
+  final String name;
+  final String message;
+  final String time;
+  final String image;
+  final int unreadCount;
+
+  const _DummyMessageData({
+    required this.name,
+    required this.message,
+    required this.time,
+    required this.image,
+    required this.unreadCount,
+  });
 }
